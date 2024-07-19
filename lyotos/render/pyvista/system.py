@@ -10,9 +10,9 @@ def render_system(renderer, system):
     
     render_surface(renderer, system.surfaces[0])
 
-    last_s = system.surfaces[0]
+    last_s = None
     
-    for s, n1, n2 in zip(system.surfaces[1:], system._indexes[:-1], system._indexes[1:]):
+    for s, n1, n2 in zip(system.surfaces, system._indexes[:-1], system._indexes[1:]):
         render_surface(renderer, s)
 
         aper_bound = s.aperture.boundary(Nboundpts)

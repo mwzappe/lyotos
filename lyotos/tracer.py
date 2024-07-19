@@ -4,25 +4,40 @@ from .coordinate_system import CoordinateSystem, GCS, CSM, Position, Vector
 from .ray import Ray, NoHit
 from .raypath import RayPath
 
-_trace_count = 0
-
-
-
-class Trace:
-    def __init__(self, system, target=None):
+class Tracer:
+    def __init__(self, system, debug=False):
         self._system = system
-        self._paths = [ ]
-        self._target = None
+        self.debug = debug
+        self._trace_count = 0
+        
+    def debug_null(self, msg):
+        pass
 
+    def debug_print(self, msg):
+        print(msg)
+
+    @property
+    def debug(self):
+        return False if self._debug == self.debug_null else True
+
+    @debug.setter
+    def debug(self, v):
+        if v == True:
+            self._debug = self.debug_print
+        else:
+            self._debug = self.debug_null
+
+    @property
+    def trace_count(self):
+        return self._trace_count
+            
     @property
     def system(self):
         return self._system
-        
+
     def trace_path(self, ray, color=None):
-        global _trace_count
-        
         debug = False
-        _trace_count += 1
+        self._trace_count += 1
         
         path = RayPath(color)
 

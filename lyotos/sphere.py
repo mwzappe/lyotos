@@ -1,6 +1,7 @@
 import numpy as np
 
-from .surface import Surface, FlatSurface
+from .surface import Surface
+from .flat_surface import FlatSurface
 from .vector import Vector
 from .ray import NoHit
 
@@ -20,6 +21,56 @@ class Sphere:
         z = (d**2 - R2**2 + R1**2)/(2*d)
 
         return z
+
+    @classmethod
+    def line_intersect(cls, p, d, R):
+        xp, yp, zp, _ = p
+        dx, dy, dz, _ = d
+
+        a = 1
+        b = 2 * (d.v3 @ p.v3)
+        c = p @ p - R**2
+
+        if 4 * c > b**2:            
+            return np.array([])
+        elif 4 * c == b**2:
+            return np.array([ -b / 2 ])
+        
+        dsc = np.sqrt(b**2 - 4 * c)
+        
+        return np.array([ -b - dsc, -b + dsc ]) / 2
+
+
+class SphPos:
+    def __init__(self, phi, theta):
+        self._phi = phi
+        self._theta = theta
+
+    @property
+    def phi(self):
+        return self._phi
+
+    @property
+    def theta(self):
+        return self._theta
+        
+    @property
+    def cartesian(self):
+        sphi = np.sin(self._phi)
+        
+        return np.array([ sphi * np.cos(self.theta), sphi * np.sin(self.theta), np.cos(self._phi) ])
+
+    @property
+    def projected(self):
+        if self.phi == 0:
+            return np.array([0, 0])
+        
+        return np.array([ np.cos(self.theta), np.sin(self.theta) ]) / np.tan((np.pi-self.phi)/2)
+    
+    def angle(self, other):
+        return np.arccos(self.cartesian @ other.cartesian)
+
+        
         
 class SphericalSurface(Surface):
     surf_name="spherical"
@@ -83,44 +134,19 @@ class SphericalSurface(Surface):
 
         return n2
 
-    def intersect(self, ray):
-        
+    def do_intersect(self, ray):        
         xp, yp, zp, _ = ray.pos
         dx, dy, dz, _ = ray.d
 
-        # |dcos| == 1, so dx**2 + dy**2 + dz**2 == 1
+        l = Sphere.line_intersect((ray.pos - Vector.from_xyz(0, 0, self.R)),
+                                   ray.d,
+                                   self.R)
 
-        def plane_hit():
-            if dz == 0:
-                raise NoHit()
-
-            l = (-zp+self.R)/dz
-            
-            if l < 0:
-                raise NoHit()
-            
-            if not self.aperture.inside(xp + l * dx, yp + l * dy):
-                raise NoHit()
-            
-            
-            return l
-        
-        b = 2 * (dx * xp + dy * yp + dz * (zp - self.R))
-        c = xp**2 + yp**2 - 2 * self.R * zp + zp**2
-
-        if 4 * c > b**2:            
-            # hit outside of spherical portion -- assume flat
-            return plane_hit()
-        
-        dsc = np.sqrt(b**2 - 4 * c)
-        
-        l = np.array([ -b - dsc, -b + dsc ]) / 2
-
-        l = l[l>=0]
+        l = l[l >= 0]
 
         if len(l) == 0:
             raise NoHit()
-        
+
         z = zp + l * dz
 
         if self.R > 0:
@@ -130,10 +156,17 @@ class SphericalSurface(Surface):
 
         if len(l) == 0:
             raise NoHit()
+            
+        assert len(l) == 1, f"Multiple intersections: {l}"
 
-        l = np.min(l)
+        l = l[0]
+
+        p = ray.pos + l * ray.d
+
+        n = self.normal(p.x, p.y)
         
-        return l
+        return l, p, n
+        
         
     
 if __name__ == "__main__":

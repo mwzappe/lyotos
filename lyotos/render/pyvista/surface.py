@@ -5,7 +5,7 @@ import pyvista as pv
 from .colors import surface_color
 
 def render_surface(renderer, surface):
-    if surface.far_field:
+    if not surface.display:
         return
     
     pts = surface.aperture.generate_surface_mesh()

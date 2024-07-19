@@ -24,9 +24,9 @@ def thin_radii(f, q, n):
 # 1/f = (n-1)*(1/r1-1/r2+(n-1)*d/(n r1 r2))
 
 def thick_radii(f, q, n, t):
-    if q == -1:
+    if q == 1:
         return 0,f * (1-n)
-    elif q==1:
+    elif q == -1:
         return -f * (1-n), 0
 
     d = -f * t * (n-1)**2 * (q + 1)

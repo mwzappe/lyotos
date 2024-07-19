@@ -1,7 +1,9 @@
 import numpy as np
 
-from .sphere import Sphere
+from .coordinate_system import CSM, Vector
+from .sphere import Sphere, SphericalSurface
 from .shape import thin_radii, thick_radii
+from .element import Element
 
 def max_aperture(r1, r2, t):
     if r1 == 0:
@@ -98,3 +100,58 @@ class Lens:
         print(f"Thick lens: {r1} {r2}")
         
         return Lens(r1, r2, t, n, aper)
+
+class MultipletLens(Element):
+    def __init__(self, cs, *, ns, Rs, ts, aperture):
+        super().__init__(cs)
+
+        cur_cs = cs
+        self._surfaces = []
+        
+        for R, t in zip(Rs, ts):
+            self._surfaces.append(SphericalSurface(cs=cur_cs, R=R))
+            cur_cs = cur_cs.xform(CSM.translate(t * Vector.Z))
+
+        self._surfaces.append(SphericalSurface(cs=cur_cs, R=Rs[-1])) 
+        
+    @property
+    def surfaces(self):
+        return self._surfaces    
+    
+    def do_intersect(self, ray):
+        hit = None
+        best_l = None
+
+        p, d = ray.pos, ray.d
+
+        # This check is needed to account for missing the cylinder
+        if d.x == 0 and d.y == 0:
+            r2 = p.x**2 + p.y**2
+            a2 = self.aperture**2
+            
+            if r2 > a2:
+                raise NoHit()
+            elif r2 == a2:
+                # Handle side hit
+                raise RuntimeError("Gotta write side hit")
+            else:
+                l, p, n = ray.find_surface([ self.surfaces[0], self.surfaces[-1] ])
+            
+        # (p.x + l * d.x)**2 + (p.y + l * d.y)**2 == R^2
+        a = d.x**2 + d.y**2
+        b = 2 * (p.x * d.x + p.y * d.y)
+        c = p.x**2 + p.y**2 - R**2
+
+        if b**2 < 4 * a * c:
+            raise NoHit()
+        
+        try:
+            l, p, n = ray.find_surface(self.surfaces)
+        except NoHit:
+            raise NoHit()
+        
+
+class SingletLens(MultipletLens):
+    def __init__(self, cs, *, n, R1, R2, t, aperture):
+        super().__init__(cs, ns = [ n ], Rs = [ R1, R2 ], ts = [ t ], aperture=aperture)
+
