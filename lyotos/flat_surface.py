@@ -1,5 +1,4 @@
-from .position import Position
-from .vector import Vector
+from lyotos.geometry import Position, Vector
 from .ray import NoHit
 from .surface import Surface
 

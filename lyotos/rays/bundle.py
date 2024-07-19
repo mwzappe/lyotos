@@ -1,7 +1,7 @@
 from numba import cuda
 import numpy as np
 
-from lyotos.coordinate_system import CoordinateSystem, GCS, CSM, Position, Vector
+from lyotos.geometry import CoordinateSystem, GCS, CSM, Position, Vector
 from .ray import Ray, NoHit
 
 TPB=16

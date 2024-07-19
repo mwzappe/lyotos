@@ -1,4 +1,4 @@
-from .coordinate_system import GCS, CSM, CoordinateSystem, Position
+from lyotos.geometry import GCS, CSM, CoordinateSystem, Position
 from .surface import create_surface
 from .aperture import CircularAperture
 from .far_field import FarField

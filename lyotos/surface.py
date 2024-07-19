@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from .coordinate_system import CoordinateSystem, CSM, Vector
-from .position import Position
+from lyotos.geometry import CoordinateSystem, CSM, Vector, Position
 from .ray import Ray, NoHit
 from .aperture import CircularAperture
 

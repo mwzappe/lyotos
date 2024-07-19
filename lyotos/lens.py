@@ -1,6 +1,6 @@
 import numpy as np
 
-from .coordinate_system import CSM, Vector
+from lyotos.geometry import CSM, Vector
 from .sphere import Sphere, SphericalSurface
 from .shape import thin_radii, thick_radii
 from .element import Element

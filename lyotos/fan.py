@@ -1,6 +1,6 @@
 import numpy as np
 
-from .coordinate_system import CoordinateSystem, GCS, CSM, Position, Vector
+from lyotos.geometry import CoordinateSystem, GCS, CSM, Position, Vector
 from .ray import Ray, NoHit
 from .raypath import RayPath
 from .caster import Caster

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .coordinate_system import GCS, CoordinateSystem, Position, Vector
+from lyotos.geometry import GCS, CoordinateSystem, Position, Vector
 from .ray import NoHit
 
 class RaySegment:

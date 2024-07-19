@@ -1,6 +1,6 @@
 import numpy as np
 
-from .position import Position
+from lyotos.geometry import Position
 
 
 class CircularAperture:

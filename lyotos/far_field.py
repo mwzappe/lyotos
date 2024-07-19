@@ -1,6 +1,6 @@
 import numpy as np
 
-from .coordinate_system import CoordinateSystem, CSM, Vector
+from lyotos.geometry import CoordinateSystem, CSM, Vector
 from .surface import Surface
 from .sphere import Sphere
 

@@ -1,8 +1,8 @@
 import numpy as np
 
+from lyotos.geometry import Vector
 from .surface import Surface
 from .flat_surface import FlatSurface
-from .vector import Vector
 from .ray import NoHit
 
 class Sphere:

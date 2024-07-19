@@ -2,7 +2,7 @@ import numpy as np
 from scipy.spatial import Delaunay
 import matplotlib.pyplot as plt
 
-from .coordinate_system import GCS, CSM, Vector
+from lyotos.geometry import GCS, CSM, Vector
 from .ray import Ray
 from .caster import Caster
 from .sphere import SphPos
