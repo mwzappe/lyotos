@@ -9,33 +9,6 @@ from .sphere import SphPos
 
 
 
-_g = 1.32471795724474602596
-a1 = 1.0/_g
-a2 = 1.0/(_g*_g)
-
-@np.vectorize
-def R2(n):
-    return (0.5+a1*n) %1, (0.5+a2*n) %1
-
-def sphR2(n):
-    # Lambert project
-    u, v = R2(n)
-
-    return np.arccos(2 * u - 1), 2 * np.pi * v
-
-def discR2(n):
-    u, v = R2(n)
-
-    return np.sqrt(u), 2 * np.pi * v
-    
-@np.vectorize
-def saR2(n, theta):
-    u, v = R2(n)
-
-    r = np.sqrt(u * theta / np.pi)
-    theta = 2 * np.pi * v
-
-    return SphPos(np.pi - 2 * np.arccos(r), theta)
 
 
     

@@ -1,13 +1,12 @@
-from .geometry import GCS, CoordinateSystem, CSM, Position, Vector
-from .sphere import Sphere
+from .geometry import *
+from .surfaces import *
+from .elements import *
+from .materials import *
 
 from .rays import Ray, RayBundle
 from .raytube import RayTube
 
-from .surface import Surface
-from .sphere import Sphere, SphericalSurface
 from .aperture import CircularAperture
-from .lens import Lens, SingletLens
 from .render import PVRenderer
 from .far_field import FarField
 from .system import System

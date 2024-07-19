@@ -94,15 +94,11 @@ class CSM:
 
     @classmethod
     def align_z(cls, v):
-        print(f"Aligning [0, 0, 1] to {v}")
         if v == -Vector.Z:
-            print(f"Negative Z {-Vector.Z}")
             return cls.rotY(np.pi)
         
         retval = cls.from_scipy_rotation(Rotation.align_vectors(v.normalized._v[:3], [0, 0, 1])[0])
 
-        print(f"Alignment matrix: {retval}")
-        
         return retval
         
     @classmethod

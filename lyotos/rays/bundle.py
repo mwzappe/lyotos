@@ -1,44 +1,53 @@
-from numba import cuda
-import numpy as np
+import cupy as cp
 
 from lyotos.geometry import CoordinateSystem, GCS, CSM, Position, Vector
 from .ray import Ray, NoHit
-
-TPB=16
-
-@cuda.jit
-def bulk_multics_conv(p, m, r):
-    i, j = cuda.grid(2)
-
-    if i < r.shape[0] and j < r.shape[1]:
-        tmp = 0.
-        for k in range(p.shape[1]):
-            tmp += p[i, k] * m[i, j, k]
-        r[i, j] = tmp
-
-#matmul[64, 64](np.zeros((64, 64)), np.zeros((64, 64)), np.zeros((64, 64)))
-
-#print("Matmul worked")
 
 class RayBundle:
     def __init__(self, cs, bundle):
         self._cs = cs
         self._bundle = bundle
+
+    def toCS(self, newcs):
+        M = newcs.fromGCS @ self.cs.toGCS
+
+        pp = cp.einsum("jk,ik->ij", M._M, self.bundle[:,0:4])
+        dp = cp.einsum("jk,ik->ij", M._M, self.bundle[:,4:8])
+
+        return RayBundle(newcs, cp.hstack((pp, dp)))
+
+    def pts_at(self, ls):
+        return self.positions + cp.einsum("i,ij->ij", ls, self.directions)
         
+        
+    @property
+    def cs(self):
+        return self._cs
+
+    @property
+    def bundle(self):
+        return self._bundle
+
+    def __len__(self):
+        return self.bundle.shape[0]
+    
+    @property
+    def positions(self):
+        return self._bundle[:,0:4]
+    
+    @property
+    def directions(self):
+        return self._bundle[:,4:8]
+
+    
     @classmethod
     def from_rays(cls, rays):
-        p = np.array([ r.pos.v for r in rays ])
-        d = np.array([ r.d.v for r in rays ])
+        p = cp.array([ r.pos.v for r in rays ])
+        d = cp.array([ r.d.v for r in rays ])
 
-        m = np.array([ r.cs.toGCS.M for r in rays ])
+        m = cp.array([ r.cs.toGCS.M for r in rays ])
 
-        pgcs = np.zeros(p.shape, dtype="float32")
-        dgcs = np.zeros(p.shape, dtype="float32")
+        pgcs = cp.einsum("ijk,ik->ij", m, p)
+        dgcs = cp.einsum("ijk,ik->ij", m, d)
         
-        bulk_multics_conv[16,(4, 4)](p, m, pgcs)
-
-        print("Convert dirs")
-        bulk_multics_conv[16,(4, 4)](d, m, dgcs)
-
-        
-        return cls(GCS, np.hstack((pgcs, dgcs)))
+        return cls(GCS, cp.hstack((pgcs, dgcs)))
