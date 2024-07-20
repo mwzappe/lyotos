@@ -18,20 +18,29 @@ l = SingletLens(GCS.newCS(Position.from_xyz(0,0,100)),
                 t=50,
                 aperture=20)
 
-print(l.petzval_sum)
+print(f"Lens Petzval Sum: {l.petzval_sum}")
 
 s.add_element(l)
 
 t = Tracer(s)
 
-bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 10 * np.pi / 180)
+bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 30 * np.pi / 180)
 
-from lyotos.geometry import Sphere
-from lyotos.surfaces import SphericalSurface
-
-cs = GCS.newCS(Position.from_xyz(0,0,200))
+t.step_bundle(bundle)
 
 h = l.intersect(bundle)
+
+print(h.l)
+print(h.p)
+print(h.n)
+
+hff = ff.intersect(bundle)
+
+print(hff.l)
+print(hff.p)
+print(hff.n)
+
+h = h.merge(hff)
 
 print(h.l)
 print(h.p)

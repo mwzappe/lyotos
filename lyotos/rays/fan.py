@@ -31,7 +31,7 @@ def create_fan(cs, pos, dir, theta, N=10):
     dcos = cp.vstack((cp.array([ [ 0, 0, 1, 0] ]),
                       dcos))
 
-    return RayBundle(cs, cp.hstack((pos, dcos)))
+    return RayBundle(cs, pos, dcos)
 
 
     

@@ -1,13 +1,13 @@
 import cupy as cp
 
+from lyotos.util import batch_dot
+
 class Sphere:
     @classmethod
-    def intersect(cls, R, bundle):
-        p = bundle[:,0:3]
-        d = bundle[:,4:7]
+    def intersect(cls, R, p, d):
         
-        dpd = cp.einsum("ij,ij->i",p,d)
-        dpp = cp.einsum("ij,ij->i",p,p)
+        dpd = batch_dot(p,d)
+        dpp = batch_dot(p,p)
 
         a = 1
         b = 2 * dpd

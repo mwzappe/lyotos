@@ -125,7 +125,7 @@ class MultipletLens(Element):
 
     @property
     def materials(self):
-        return self._materials    
+        return self._materials
 
     @property
     def surroundings(self):
@@ -142,8 +142,7 @@ class MultipletLens(Element):
         for s in self.surfaces[1:]:
             hits = hits.merge(s.intersect(bundle))
 
-        print(hits.surfaces)
-
+        return hits
 
     @property
     def petzval_sum(self, nu=None):

@@ -1,5 +1,7 @@
 import cupy as cp
 
+from lyotos.util import take_lowest_l_p_2
+from lyotos.rays import MISS
 from lyotos.geometry import Sphere
 
 from .surface import Surface
@@ -18,33 +20,27 @@ class SphericalSurface(Surface):
         return self._R
 
     def do_intersect(self, bundle):
-        offset = cp.repeat(cp.array([ [ 0, 0, -self.R, 0, 0, 0, 0, 0 ] ]), len(bundle), axis=0)
+        offset = cp.repeat(cp.array([ [ 0, 0, -self.R, 0 ] ]), len(bundle), axis=0)
 
-        l = Sphere.intersect(self.R, bundle.bundle + offset)
+        l = Sphere.intersect(self.R, bundle.positions + offset, bundle.directions)
 
-        l[l < 0] = cp.nan
+        # Avoid repeat intersection
+        l[cp.isnan(l)] = MISS
+        l[l < 1e-7] = MISS
 
         p0 = bundle.pts_at(l[:,0])
         p1 = bundle.pts_at(l[:,1])
         
         if self.R > 0:
-            l[(p0[:,2] > self.R),0] = cp.nan
-            l[(p1[:,2] > self.R),1] = cp.nan
+            l[(p0[:,2] > self.R),0] = MISS
+            l[(p1[:,2] > self.R),1] = MISS
         else:
-            l[(p0[:,2] < -self.R),0] = cp.nan
-            l[(p1[:,2] < -self.R),1] = cp.nan
+            l[(p0[:,2] < -self.R),0] = MISS
+            l[(p1[:,2] < -self.R),1] = MISS
 
-        FLOATMAX=1e11
-            
-        l[cp.isnan(l)] = 1e11
-            
-        li = cp.argmin(l, 1)
 
-        p = cp.einsum("i,ij->ij", (1 - li), p0) + cp.einsum("i,ij->ij", li, p1)
-        l = cp.take_along_axis(l, li[:,cp.newaxis], 1).flatten()
-
-        l[l == 1e11] = cp.nan
-
+        l, p = take_lowest_l_p_2(l, p0, p1)
+        
         n = p - cp.repeat(cp.array([ [ 0, 0, self.R, 1] ]), len(bundle), axis=0)
 
         n = cp.einsum("ij,i->ij", n, 1.0/cp.linalg.norm(n, axis=1))

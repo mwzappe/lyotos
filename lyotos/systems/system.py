@@ -1,7 +1,4 @@
 from lyotos.geometry import GCS, CSM, CoordinateSystem, Position
-from .surface import create_surface
-from .aperture import CircularAperture
-from .far_field import FarField
 
 class System:
     def __init__(self, cs=GCS, far_field=None):
@@ -11,10 +8,13 @@ class System:
         self._elements = []
 
     @property
+    def far_field(self):
+        return self._far_field
+        
+    @property
     def elements(self):
         return self._elements
         
     def add_element(self, element):
         self._elements.append(element)
 
-    
