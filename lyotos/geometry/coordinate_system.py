@@ -1,13 +1,13 @@
-import numpy as np
+import cupy as cp
 from scipy.spatial.transform import Rotation
 
-from vtkmodules.vtkCommonMath import vtkMatrix4x4
+from lyotos.util import darray
 
 from .vector import Vector
 from .position import Position
     
 class CSM:
-    def __init__(self, M=np.array([
+    def __init__(self, M=darray([
             [ 1, 0, 0, 0 ],
             [ 0, 1, 0, 0 ],
             [ 0, 0, 1, 0 ],
@@ -21,18 +21,8 @@ class CSM:
         
     @property
     def inv(self):
-        return CSM(np.linalg.inv(self._M))
+        return CSM(cp.linalg.inv(self._M))
         
-    @property
-    def vtk(self):
-        retval = vtkMatrix4x4()
-
-        for i in range(4):
-            for j in range(4):
-                retval.SetElement(i, j, self._M[i][j])
-
-        return retval
-
     def __matmul__(self, other):
         if isinstance(other, CSM):
             return CSM(self._M @ other._M)
@@ -49,34 +39,34 @@ class CSM:
     
     @classmethod
     def rotX(cls, theta):
-        M = np.identity(4)
+        M = cp.identity(4)
 
-        M[1][1] = np.cos(theta)
-        M[1][2] = -np.sin(theta)
-        M[2][1] = np.sin(theta)
-        M[2][2] = np.cos(theta)
+        M[1][1] = cp.cos(theta)
+        M[1][2] = -cp.sin(theta)
+        M[2][1] = cp.sin(theta)
+        M[2][2] = cp.cos(theta)
 
         return CSM(M)
 
     @classmethod
     def rotY(cls, theta):
-        M = np.identity(4)
+        M = cp.identity(4)
 
-        M[0][0] = np.cos(theta)
-        M[0][2] = np.sin(theta)
-        M[2][0] = -np.sin(theta)
-        M[2][2] = np.cos(theta)
+        M[0][0] = cp.cos(theta)
+        M[0][2] = cp.sin(theta)
+        M[2][0] = -cp.sin(theta)
+        M[2][2] = cp.cos(theta)
 
         return CSM(M)
 
     @classmethod
     def rotZ(cls, theta):
-        M = np.identity(4)
+        M = cp.identity(4)
 
-        M[0][0] = np.cos(theta)
-        M[0][1] = -np.sin(theta)
-        M[1][0] = np.sin(theta)
-        M[1][1] = np.cos(theta)
+        M[0][0] = cp.cos(theta)
+        M[0][1] = -cp.sin(theta)
+        M[1][0] = cp.sin(theta)
+        M[1][1] = cp.cos(theta)
 
         return CSM(M)
 
@@ -84,7 +74,7 @@ class CSM:
     def rot2(cls, phi, theta):
         # Rotate Z axis by phi
 
-        v = Vector.from_xyz(np.sin(phi), 0, np.cos(phi))
+        v = Vector.from_xyz(cp.sin(phi), 0, cp.cos(phi))
         
         return cls.from_axis_angle(v, theta) @ cls.rotY(phi)
 
@@ -95,7 +85,7 @@ class CSM:
     @classmethod
     def align_z(cls, v):
         if v == -Vector.Z:
-            return cls.rotY(np.pi)
+            return cls.rotY(cp.pi)
         
         retval = cls.from_scipy_rotation(Rotation.align_vectors(v.normalized._v[:3], [0, 0, 1])[0])
 
@@ -103,7 +93,7 @@ class CSM:
         
     @classmethod
     def from_scipy_rotation(cls, R):
-        m = np.pad(R.as_matrix(), ((0,1),(0,1))) 
+        m = cp.pad(cp.asarray(R.as_matrix()), ((0,1),(0,1))) 
         m[3][3] = 1
         return cls(m)
 
@@ -116,39 +106,36 @@ class CSM:
     # Create a new CS translated by dz
     @classmethod
     def tX(cls, dx):
-        return cls(np.array([
-            [ 1, 0, 0, -dx ],
-            [ 0, 1, 0, 0 ],
-            [ 0, 0, 1, 0 ],
-            [ 0, 0, 0, 1 ]
-        ]))
+        M = cp.identity(4)
+
+        M[0][3] = -dx
+
+        return cls(M)
 
     
     # Create a new CS translated by dz
     @classmethod
     def tY(cls, dy):
-        return cls(np.array([
-            [ 1, 0, 0, 0 ],
-            [ 0, 1, 0, -dy ],
-            [ 0, 0, 1, 0 ],
-            [ 0, 0, 0, 1 ]
-        ]))
+        M = cp.identity(4)
+
+        M[1][3] = -dy
+
+        return cls(M)
 
     
     # Create a new CS translated by dz
     @classmethod
     def tZ(cls, dz):
-        return cls(np.array([
-            [ 1, 0, 0, 0 ],
-            [ 0, 1, 0, 0 ],
-            [ 0, 0, 1, -dz ],
-            [ 0, 0, 0, 1 ]
-        ]))
+        M = cp.identity(4)
+
+        M[2][3] = -dz
+
+        return cls(M)
 
     # Create a new CS translated by dz
     @classmethod
     def translate(cls, pos):
-        return cls(np.array([
+        return cls(darray([
             [ 1, 0, 0, -pos.x ],
             [ 0, 1, 0, -pos.y ],
             [ 0, 0, 1, -pos.z ],

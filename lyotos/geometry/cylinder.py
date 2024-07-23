@@ -8,8 +8,6 @@ class Cylinder:
         px, py = bundle[:,0:2]
         dx, dy = bundle[:,4:6]
 
-        print(dx, dy)
-        
         a = dx**2 + dy**2
         b = 2 * (px * dx + py * dy)
         c = px**2 + py**2 - R**2

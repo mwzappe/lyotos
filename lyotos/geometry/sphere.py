@@ -1,6 +1,6 @@
 import cupy as cp
 
-from lyotos.util import batch_dot
+from lyotos.util import batch_dot, darray
 
 class Sphere:
     @classmethod
@@ -15,7 +15,7 @@ class Sphere:
 
         dsc = cp.sqrt(b**2 - 4 * a * c)
 
-        l = cp.array([ -b + dsc, -b - dsc ]).T / 2
+        l = darray([ -b + dsc, -b - dsc ]).T / 2
 
         return l
 

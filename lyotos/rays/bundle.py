@@ -1,6 +1,6 @@
 import cupy as cp
 
-from lyotos.util import MISS, matrix_mult_nvecs
+from lyotos.util import MISS, darray, matrix_mult_nvecs
 from lyotos.geometry import CoordinateSystem, GCS, CSM, Position, Vector
 from .ray import Ray, NoHit
 
@@ -51,10 +51,7 @@ class RayBundle:
     
     @property
     def cs(self):
-        return self._cs
-
-    def __len__(self):
-        return self.positions.shape[0]
+        return self._cs        
     
     @property
     def positions(self):
@@ -67,12 +64,24 @@ class RayBundle:
     
     @classmethod
     def from_rays(cls, rays):
-        p = cp.array([ r.pos.v for r in rays ])
-        d = cp.array([ r.d.v for r in rays ])
+        p = darray([ r.pos.v for r in rays ])
+        d = darray([ r.d.v for r in rays ])
 
-        m = cp.array([ r.cs.toGCS.M for r in rays ])
+        m = darray([ r.cs.toGCS.M for r in rays ])
 
         pgcs = cp.einsum("ijk,ik->ij", m, p)
         dgcs = cp.einsum("ijk,ik->ij", m, d)
         
         return cls(GCS, cp.hstack((pgcs, dgcs)))
+
+    def __len__(self):
+        return self.positions.shape[0]
+
+    def __repr__(self):
+        s = f"Bundle(\n"
+        s = f"CS: {self.cs}\n"
+        s += f"Positions: {self.positions}\n"
+        s += f"Directions: {self.directions}\n"
+        s += f")\n"
+        
+        return s

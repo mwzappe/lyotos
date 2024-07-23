@@ -1,5 +1,13 @@
 import cupy as cp
 
+
+def darray(o):
+    return cp.array(o, float)
+
+def iarray(o):
+    return cp.array(o, int)
+
+
 MISS = cp.finfo(cp.float32).max
 
 def take_lowest_l_p_2(l, p0, p1):

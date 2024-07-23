@@ -1,4 +1,8 @@
+import cupy as cp
+
 import pyvista as pv
+
+from lyotos.util import iarray
 
 from .trace import render_trace
 
@@ -7,17 +11,70 @@ class PVRenderer:
         self._plotter = pv.Plotter()
         self._plotter.add_mesh(pv.Plane())
         
-    def add_mesh(self, mesh, **kwargs):
+    def add_cylinder(self, cs, R, h, capping=False):
+        M = cs.toGCS
+        
+        mesh = pv.Cylinder(center=(0,0,h/2), direction=(0,0,1), radius=R, height=h, capping=capping)
+
+        mesh.transform(M._M.get())
+
+        self._add_mesh(mesh)
+
+    def add_spherical_cap(self, cs, R, r):
+        M = cs.toGCS
+        
+        phi = cp.arcsin(r/R) * 180/cp.pi
+
+        if R < 0:
+            mesh = pv.Sphere(radius=R,
+                             center=(0.0, 0.0, R),
+                             end_phi=phi)
+        else:
+            mesh = pv.Sphere(radius=R,
+                             center=(0.0, 0.0, R),
+                             start_phi=180-phi)
+        
+        mesh.transform(M._M.get())
+
+        self._add_mesh(mesh)
+
+    def add_lines(self, cs, start_points, end_points):
+        M = cs.toGCS
+
+        pts = cp.concatenate((start_points, end_points))[:,:3].get()
+
+        lines = iarray([ [ 2, i, i + start_points.shape[0] ] for i in range(start_points.shape[0]) ]).flatten().get()
+        
+        mesh = pv.PolyData(pts, lines=lines)
+        
+        mesh.transform(M._M.get())
+
+        self._add_mesh(mesh)
+        
+    def _add_mesh(self, mesh, **kwargs):
         if "opacity" not in kwargs:
             kwargs["opacity"] = 0.5
 
         if "line_width" not in kwargs:
             kwargs["line_width"] = 3
             
-        self._plotter.add_mesh(mesh, **kwargs)
+        return self._plotter.add_mesh(mesh, **kwargs)
     
     def render_trace(self, trace):
         render_trace(self, trace)
 
     def show(self):
+        s = pv.Sphere(radius=1, center=(0, 0, 000))
+
+        self._plotter.add_mesh(s, color="red")
+        
+        s = pv.Sphere(radius=1, center=(0, 0, 100))        
+
+        self._plotter.add_mesh(s, color="green")
+
+        s = pv.Sphere(radius=1, center=(0, 0, 200))        
+
+        self._plotter.add_mesh(s, color="blue")
+        
+        self._plotter.show_axes()
         self._plotter.show()

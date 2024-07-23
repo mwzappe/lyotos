@@ -15,11 +15,11 @@ class Surface:
         return self._cs
 
     def intersect(self, bundle):
-        bundle = bundle.toCS(self.cs)
-        
-        l, p, n = self.do_intersect(bundle)
+        l, p, n = self.do_intersect(bundle.toCS(self.cs))
 
         return HitBundle(bundle.positions, bundle.directions, [ self for i in range(len(l)) ], l, p, n)
-        
+
+    def render(self, renderer):
+        raise RuntimeError("Render is not implemented for class {self.__class__}")
         
         

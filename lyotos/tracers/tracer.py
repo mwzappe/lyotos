@@ -37,9 +37,12 @@ class Tracer:
 
     def step_bundle(self, bundle):
         h = self.system.far_field.intersect(bundle)
-        
+                
         for e in self.elements:
-            print(e)
+            hp = e.intersect(bundle)
+            h = h.merge(hp)
+
+        return h
             
     
     def trace_bundle(self, bundle):

@@ -1,7 +1,7 @@
 import cupy as cp
 
 from lyotos.geometry import CSM, Vector, Sphere
-from lyotos.surfaces import SphericalSurface
+from lyotos.surfaces import SphericalSurface, CylinderSurface
 from lyotos.materials import Vacuum
 
 from .shape import thin_radii, thick_radii
@@ -20,18 +20,7 @@ def max_aperture(r1, r2, t):
 
     rp = np.sqrt(r1**2 - x2)
 
-    return 2*rp
-
-    
-    zz = 4 * dist**2 * r1**2 - (dist**2-r2**2+r1**2)**2
-    
-    print(f"zz: {zz}")
-        
-    if zz < 0:
-        return 2*np.min(np.abs([ r1, r2 ]))
-
-    return np.abs(1/dist * np.sqrt(zz))
-    
+    return 2*rp    
 
 class Lens(Element):
     def __init__(self, R1, R2, t, n, aper):
@@ -69,11 +58,9 @@ class Lens(Element):
     def h2(self):
         return -self.f * (self.n - 1) * self.t / (self.R1 * self.n)
 
-    
     @property
     def aper(self):
         return self._aper
-
     
     @property
     def f(self):
@@ -86,8 +73,6 @@ class Lens(Element):
     @property
     def max_aperture(self):
         return max_aperture(self.R1, self.R2, self.t)
-                    
-    
     
     @classmethod
     def with_shape(cls, f, q, n, aper=None, t=1):
@@ -112,12 +97,21 @@ class MultipletLens(Element):
         self._materials = materials
         self._surroundings = Vacuum
 
-        self._surfaces.append(SphericalSurface(cs=cur_cs, R=Rs[0]))
+        self._surfaces.append(SphericalSurface(cs=cur_cs, R=Rs[0], aperture=aperture))
         
         for R, t in zip(Rs[1:], ts):
             cur_cs = cur_cs.xform(CSM.translate(t * Vector.Z))
-            self._surfaces.append(SphericalSurface(cs=cur_cs, R=R))
+            self._surfaces.append(SphericalSurface(cs=cur_cs, R=R, aperture=aperture))
             
+        self._total_thickness = sum(ts)
+
+        z1 = self.surfaces[0].edge_z
+        z2 = self.surfaces[-1].edge_z
+        
+        self._edge = CylinderSurface(cs=cs.xform(CSM.tZ(z1)),
+                                     R=aperture/2,
+                                     h = (self._total_thickness + z2 - z1).get())
+        
             
     @property
     def surfaces(self):
@@ -130,13 +124,17 @@ class MultipletLens(Element):
     @property
     def surroundings(self):
         return self._surroundings
-    
+
     def do_intersect(self, bundle):
-        hit = None
-        best_l = None
+        hits = self.surfaces[0].intersect(bundle)
+        hits.merge(self.surfaces[-1].intersect(bundle))
 
-        p, d = bundle.positions, bundle.directions
-
+        hits.merge(self._edge.intersect(bundle))
+        
+        
+        return hits.l, hits.p, hits.n
+        
+    def do_trace(self, bundle):
         hits = self.surfaces[0].intersect(bundle)
 
         for s in self.surfaces[1:]:
@@ -152,7 +150,6 @@ class MultipletLens(Element):
         
         for s, m in zip(self.surfaces[:-1], self.materials):
             n = m.n(nu)
-            print(f"last n: {last_n} n: {n}")
             retval += (n - last_n) / (s.R * n * last_n)
             last_n = n
 
@@ -160,6 +157,11 @@ class MultipletLens(Element):
         
         return retval
 
+    def render(self, renderer):
+        self._edge.render(renderer)
+
+        for s in self.surfaces:
+            s.render(renderer)
 
 class SingletLens(MultipletLens):
     def __init__(self, cs, *, material, R1, R2, t, aperture):

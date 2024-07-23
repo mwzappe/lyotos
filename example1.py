@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-import numpy as np
+import cupy as cp
+import time
 
 from lyotos import *
 
-n2 = np.sqrt(2.53)
+n2 = cp.sqrt(2.53)
 
-ff = FarField(GCS, Position.from_xyz(0,0,0), 1000)
+ff = FarField(GCS, Position.from_xyz(0,0,0), 200)
 
 s = System(far_field=ff)
 
@@ -24,24 +25,18 @@ s.add_element(l)
 
 t = Tracer(s)
 
-bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 30 * np.pi / 180)
+start = time.perf_counter_ns()
+bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 2 * cp.pi / 180, N=10000)
+end = time.perf_counter_ns()
 
-t.step_bundle(bundle)
+print(f"{end-start}ns")
 
-h = l.intersect(bundle)
+h = t.step_bundle(bundle)
 
-print(h.l)
-print(h.p)
-print(h.n)
+r = PVRenderer()
 
-hff = ff.intersect(bundle)
+h.render(r)
 
-print(hff.l)
-print(hff.p)
-print(hff.n)
+l.render(r)
 
-h = h.merge(hff)
-
-print(h.l)
-print(h.p)
-print(h.n)
+r.show()
