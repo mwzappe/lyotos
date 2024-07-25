@@ -7,8 +7,8 @@ from lyotos.rays import MISS
 from .surface import Surface
 
 class CylinderSurface(Surface):
-    def __init__(self, cs, R, h, first_surface_only=True):
-        super().__init__(cs)
+    def __init__(self, cs, interaction, R, h):
+        super().__init__(cs, interaction)
         self._R = R
         self._h = h
 
@@ -31,7 +31,7 @@ class CylinderSurface(Surface):
         
         dsc = cp.sqrt(b ** 2 - 4 * a * c)
 
-        l = darray([ -b + dsc, -b - dsc ]).T
+        l = darray([ -b + dsc, -b - dsc ]).T / 2 / a[:,cp.newaxis]
 
         l[cp.isnan(l)] = MISS
         l[l < 1e-7] = MISS
@@ -39,6 +39,9 @@ class CylinderSurface(Surface):
         l = cp.min(l, axis=1)
         
         p = bundle.pts_at(l)
+
+        l[p[:,2] < 0] = MISS
+        l[p[:,2] > self.h] = MISS
 
         n = darray([ -p[:,0], -p[:,1], cp.zeros(len(p)), cp.zeros(len(p)) ]).T
 

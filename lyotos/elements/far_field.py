@@ -3,18 +3,28 @@ import cupy as cp
 from lyotos.geometry import CSM, GCS, Position, Sphere
 from lyotos.rays import MISS
 from lyotos.physics import Absorber
-from lyotos.surfaces import SphericalSurface
 
+from lyotos import surfaces
+
+from lyotos.physics import Interaction
 from .element import Element
+
+class FarFieldInteraction(Interaction):
+    pass
+
 
 class FarField(Element):
     def __init__(self, cs=GCS, center=Position.CENTER, radius=1e4):
         super().__init__(cs=cs.xform(CSM.translate(center)))
 
-        self._surface = SphericalSurface(self.cs, radius, hemisphere=False)
+        self._surface = surfaces.Sphere(self.cs, FarFieldInteraction(), radius)
         
         self._center = center        
 
+    @property
+    def boundary(self):
+        return [ self._surface ]
+        
     @property
     def center(self):
         return self._center
@@ -27,26 +37,10 @@ class FarField(Element):
     def absorber(self):
         return True
 
-    def do_trace(self, bundle):
+    def propagate(self, hit_set):
+        # Keep an array of rays by direction
+        
+        return []
+
+    def render(self, renderer):
         pass
-        
-    def do_intersect(self, bundle):
-        l = Sphere.intersect(self.R, bundle.positions, bundle.directions)
-
-        assert not cp.any(cp.isnan(l))
-
-        # Avoid repeat intersection
-        l[l < 1e-7] = MISS
-
-        l = cp.min(l, axis=1)
-
-        p = bundle.pts_at(l)
-
-        n = -p 
-
-        n = cp.einsum("ij,i->ij", n, 1.0/cp.linalg.norm(n, axis=1))
-
-        n[:,3] = 0
-
-        return l, p, n
-        

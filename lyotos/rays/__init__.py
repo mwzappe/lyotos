@@ -1,5 +1,4 @@
-from .ray import Ray
-from .hit import HitBundle
-from .bundle import RayBundle, MISS
+from .base import MISS
+from .bundle import Bundle, MISS
 from .fan import create_fan
 

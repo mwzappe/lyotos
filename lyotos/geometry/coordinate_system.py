@@ -14,7 +14,7 @@ class CSM:
             [ 0, 0, 0, 1 ]
         ])):
         self._M = M
-
+        
     @property
     def M(self):
         return self._M
@@ -22,7 +22,12 @@ class CSM:
     @property
     def inv(self):
         return CSM(cp.linalg.inv(self._M))
-        
+
+    def batch_mult(self, other):
+        assert len(other.shape) == 2, f"Only handles vectors for now (i.e. shape must be Nx4): shape {other.shape}"
+
+        return cp.einsum("jk,ik->ij", self._M, other).reshape((len(other), 4))
+    
     def __matmul__(self, other):
         if isinstance(other, CSM):
             return CSM(self._M @ other._M)
@@ -80,12 +85,32 @@ class CSM:
 
     @classmethod
     def from_axis_angle(cls, axis, theta):
-        return cls.from_scipy_rotation(Rotation.from_rotvec(axis._v[:3] * theta))
+        #return cls.from_scipy_rotation(Rotation.from_rotvec(axis._v[:3] * theta))
 
+        ux, uy, uz = axis.normalized.v[:3]
+        ct = cp.cos(theta)
+        st = cp.sin(theta)
+
+        # ct * I + st * axis.cross_product_matrix + (1 - ct) * outer(u, u)
+        
+        M = cp.array([
+            [ ct + ux**2 * (1 - ct), ux * uy * (1 - ct) - uz * st, ux * uz * (1 - ct) + uy * st, 0 ],
+            [ uy * ux * (1 - ct) + uz * st, ct + uy**2 * (1 - ct), uy * uz * (1 - ct) - ux * st, 0 ],
+            [ uz * ux * (1 - ct) - uz * st, uy * uz * (1 - ct) + ux * st, ct + uz**2 * (1 - ct), 0 ],
+            [ 0, 0, 0, 1 ]
+        ])
+
+        return cls(M)
+    
     @classmethod
     def align_z(cls, v):
+        if v == Vector.Z:
+            return cls.I
+            
         if v == -Vector.Z:
             return cls.rotY(cp.pi)
+
+        axis = v.cross(Vector.Z).normalized
         
         retval = cls.from_scipy_rotation(Rotation.align_vectors(v.normalized._v[:3], [0, 0, 1])[0])
 
@@ -142,15 +167,14 @@ class CSM:
             [ 0, 0, 0, 1 ]
         ]))
 
-        
-
 class CoordinateSystem:
     def __init__(self, parent, M=CSM()):
         # M goes from parent to child
-        
         self._parent = parent
         self._M = M
-
+        self._fromGCS = self._M @ parent.fromGCS if parent is not None else self._M
+        self._toGCS = self._fromGCS.inv
+        
     def newCS(self, p, d = Vector.Z):
         return self.xform(CSM.align_z(d) @ CSM.translate(p))
         
@@ -159,14 +183,11 @@ class CoordinateSystem:
         
     @property
     def fromGCS(self):
-        if self._parent is not None:
-            return self._M @ self._parent.fromGCS
-
-        return self._M
+        return self._fromGCS
     
     @property
     def toGCS(self):
-        return self.fromGCS.inv
+        return self._toGCS
 
     @property
     def isGCS(self):
@@ -175,5 +196,6 @@ class CoordinateSystem:
     def __repr__(self):
         return f"<<|{self._M._M}|>>"
     
-        
+
+CSM.I = CSM()
 GCS = CoordinateSystem(None, CSM())

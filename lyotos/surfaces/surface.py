@@ -1,25 +1,29 @@
-from lyotos.rays import HitBundle
+from lyotos.geometry import GeometryObj
 from lyotos.physics import Interface
 
-class Surface:
-    def __init__(self, cs, interaction_cls=Interface):
-        self._cs = cs
-        self._interaction = interaction_cls(self)
+class Surface(GeometryObj):
+    def __init__(self, cs, interaction):
+        super().__init__(cs)
+        self._interaction = interaction
 
     @property
     def interaction(self):
         return self._interaction
+
+    def interact(self, hit_set, m1, m2):
         
-    @property
-    def cs(self):
-        return self._cs
+        new_rays = self.interaction.interact(self, hit_set)
 
+        return new_rays
+    
     def intersect(self, bundle):
-        l, p, n = self.do_intersect(bundle.toCS(self.cs))
+        bundle = bundle.toCS(self.cs)
+        
+        l, p, n = self.do_intersect(bundle)
 
-        return HitBundle(bundle.positions, bundle.directions, [ self for i in range(len(l)) ], l, p, n)
+        return bundle.add_hits(self, l, p, n)
 
     def render(self, renderer):
-        raise RuntimeError("Render is not implemented for class {self.__class__}")
+        raise RuntimeError("Render is not implemented for class {self.__class__.__name__}")
         
         

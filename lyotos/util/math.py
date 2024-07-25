@@ -2,8 +2,12 @@ import cupy as cp
 
 
 def darray(o):
-    return cp.array(o, float)
-
+    try:
+        return cp.array(o, cp.float64)
+    except Exception as e:
+        print(f"Failed to create array from {o}")
+        raise e
+    
 def iarray(o):
     return cp.array(o, int)
 
@@ -24,6 +28,3 @@ def take_lowest_l_p_2(l, p0, p1):
 
 def batch_dot(vs1, vs2):
     return cp.einsum("ij,ij->i",vs1,vs2)
-
-def matrix_mult_nvecs(M, vs):
-    return cp.einsum("jk,ik->ij", M, vs)

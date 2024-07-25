@@ -21,7 +21,7 @@ class Material:
             else:
                 self._n = n
             
-    def n(self, nu):
+    def n(self, nu=500):
         return self._n(nu)
 
 Vacuum = Material(n=1)

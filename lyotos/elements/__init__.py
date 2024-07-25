@@ -1,3 +1,4 @@
+from .compound_obj import CompoundObj
 from .element import Element
 from .far_field import FarField
-from .lens import Lens, MultipletLens, SingletLens
+from .lens import MultipletLens, SingletLens

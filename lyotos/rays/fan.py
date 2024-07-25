@@ -4,7 +4,7 @@ from numba import cuda
 
 from lyotos.util import darray
 from lyotos.geometry import SphPos, CSM
-from .bundle import RayBundle
+from .bundle import Bundle
 
 def sph_to_cart(sph, cart):
     i = cuda.grid(1)
@@ -32,7 +32,7 @@ def create_fan(cs, pos, dir, theta, N=10):
     dcos = cp.vstack((darray([ [ 0, 0, 1, 0] ]),
                       dcos))
 
-    return RayBundle(cs, pos, dcos)
+    return Bundle(pos, dcos, cs=cs)
 
 
     

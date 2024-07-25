@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import cupy as cp
+import cupyx
+
 import time
 
 from lyotos import *
@@ -14,29 +16,23 @@ Rexolite = Material(er=2.53)
 
 l = SingletLens(GCS.newCS(Position.from_xyz(0,0,100)),
                 material=Rexolite,
-                R1=100,
-                R2=100,
-                t=50,
+                R1=25,
+                R2=-25,
+                t=5,
                 aperture=20)
+
+print(f"Lens focal length: {l.f()}")
 
 print(f"Lens Petzval Sum: {l.petzval_sum}")
 
 s.add_element(l)
 
-t = Tracer(s)
+bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 2 * cp.pi / 180, N=20)
 
-start = time.perf_counter_ns()
-bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 2 * cp.pi / 180, N=10000)
-end = time.perf_counter_ns()
+s.push_bundle(bundle)
 
-print(f"{end-start}ns")
+s.trace_loop()
 
-h = t.step_bundle(bundle)
-
-r = PVRenderer()
-
-h.render(r)
-
-l.render(r)
+r = PVRenderer(s)
 
 r.show()

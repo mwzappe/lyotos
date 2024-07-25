@@ -5,8 +5,8 @@ from lyotos.geometry import Cylinder
 from .surface import Surface
 
 class CylindricalSurface(Surface):
-    def __init__(self, cs, R, h, first_surface_only=True):
-        super().__init__(cs)
+    def __init__(self, cs, interaction, R, h, first_surface_only=True):
+        super().__init__(cs, interaction)
         self._R = R
         self._h = h
 

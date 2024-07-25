@@ -3,17 +3,18 @@ import cupy as cp
 import pyvista as pv
 
 from lyotos.util import iarray
+from lyotos.rays import Bundle
 
 from .trace import render_trace
 
 class PVRenderer:
-    def __init__(self):
+    def __init__(self, system):
         self._plotter = pv.Plotter()
-        self._plotter.add_mesh(pv.Plane())
+        self._system = system
         
     def add_cylinder(self, cs, R, h, capping=False):
         M = cs.toGCS
-        
+
         mesh = pv.Cylinder(center=(0,0,h/2), direction=(0,0,1), radius=R, height=h, capping=capping)
 
         mesh.transform(M._M.get())
@@ -22,18 +23,21 @@ class PVRenderer:
 
     def add_spherical_cap(self, cs, R, r):
         M = cs.toGCS
-        
-        phi = cp.arcsin(r/R) * 180/cp.pi
 
-        if R < 0:
+        phi = cp.arcsin(r/R) * 180/cp.pi
+        
+        if R > 0:
             mesh = pv.Sphere(radius=R,
                              center=(0.0, 0.0, R),
+                             direction=(0.0, 0.0, -1.0),
                              end_phi=phi)
         else:
-            mesh = pv.Sphere(radius=R,
+            mesh = pv.Sphere(radius=-R,
                              center=(0.0, 0.0, R),
-                             start_phi=180-phi)
-        
+                             direction=(0.0, 0.0, 1.0),
+                             end_phi=-phi)
+
+            
         mesh.transform(M._M.get())
 
         self._add_mesh(mesh)
@@ -55,15 +59,17 @@ class PVRenderer:
         if "opacity" not in kwargs:
             kwargs["opacity"] = 0.5
 
-        if "line_width" not in kwargs:
-            kwargs["line_width"] = 3
+        #if "line_width" not in kwargs:
+        #    kwargs["line_width"] = 3
             
         return self._plotter.add_mesh(mesh, **kwargs)
-    
-    def render_trace(self, trace):
-        render_trace(self, trace)
 
     def show(self):
+        self._system.render(self)
+        
+        for b in Bundle.bundles:
+            b.hits.render(self)
+        
         s = pv.Sphere(radius=1, center=(0, 0, 000))
 
         self._plotter.add_mesh(s, color="red")
@@ -75,6 +81,8 @@ class PVRenderer:
         s = pv.Sphere(radius=1, center=(0, 0, 200))        
 
         self._plotter.add_mesh(s, color="blue")
-        
+
+        self._plotter.view_zx()
+        #self._plotter.set_viewup([1, 0, 0])
         self._plotter.show_axes()
         self._plotter.show()

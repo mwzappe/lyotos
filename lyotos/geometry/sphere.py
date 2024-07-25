@@ -14,7 +14,7 @@ class Sphere:
         c = dpp - R**2
 
         dsc = cp.sqrt(b**2 - 4 * a * c)
-
+        
         l = darray([ -b + dsc, -b - dsc ]).T / 2
 
         return l

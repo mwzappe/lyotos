@@ -1,4 +1,5 @@
-
+from lyotos.geometry import GeometryObj
+from lyotos.rays import Bundle
 
 class Tracer:
     def __init__(self, system, debug=False):
@@ -36,14 +37,15 @@ class Tracer:
         return self.system.elements
 
     def step_bundle(self, bundle):
-        h = self.system.far_field.intersect(bundle)
+        self.system.far_field.intersect(bundle)
                 
         for e in self.elements:
-            hp = e.intersect(bundle)
-            h = h.merge(hp)
+            e.intersect(bundle)
 
-        return h
-            
+        for oid, hs in bundle.hits.hit_sets.items():
+            GeometryObj.get(oid).trace(hs)
+
+        
     
-    def trace_bundle(self, bundle):
+    def trace(self):
         pass

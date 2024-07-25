@@ -1,24 +1,33 @@
-import numpy as np
+import cupy as cp
 
+from lyotos.util import darray
 from .vector import Vector
 
 class Position:
     def __init__(self, v=[ 0, 0, 0, 1]):
         assert v[3] == 1, f"Position v[3] != 1: {v}"
-        self._v = np.asarray(v) 
+        self._v = cp.asarray(v, dtype=float) 
 
     @property
     def x(self):
-        return self._v[0]
+        return float(self._v[0])
 
     @property
     def y(self):
-        return self._v[1]
+        return float(self._v[1])
 
     @property
     def z(self):
-        return self._v[2]
+        return float(self._v[2])
 
+    @x.setter
+    def x(self, x):
+        self._v[0] = x
+    
+    @y.setter
+    def y(self, z):
+        self._v[1] = y
+    
     @z.setter
     def z(self, z):
         self._v[2] = z
@@ -29,7 +38,7 @@ class Position:
         
     @property
     def norm(self):
-        return np.linalg.norm(self._v[:3])
+        return cp.linalg.norm(self._v[:3])
 
     @property
     def v3(self):
@@ -37,7 +46,7 @@ class Position:
     
     @classmethod
     def from_xyz(cls, x, y, z):
-        return cls([x, y, z, 1])
+        return cls([float(x), float(y), float(z), 1])
 
     def __getitem__(self, n):
         return self._v[n]

@@ -1,25 +1,33 @@
-import numpy as np
+import cupy as cp
 
 class Vector:
     def __init__(self, v = [ 0, 0, 1, 0 ]):
         assert v[3] == 0, f"Vector initialized with 3rd component non-zero {v}"
-        self._v = np.asarray(v)
+        self._v = cp.asarray(v, dtype=float)
 
     @property
     def x(self):
-        return self._v[0]
+        return float(self._v[0])
 
     @property
     def y(self):
-        return self._v[1]
+        return float(self._v[1])
 
     @property
     def z(self):
-        return self._v[2]
+        return float(self._v[2])
 
+    @x.setter
+    def x(self, x):
+        self._v[0] = float(x)
+    
+    @y.setter
+    def y(self, z):
+        self._v[1] = float(y)
+    
     @z.setter
     def z(self, z):
-        self._v[2] = z
+        self._v[2] = float(z)
 
         
     @classmethod
@@ -28,7 +36,7 @@ class Vector:
 
     @property
     def norm(self):
-        return np.linalg.norm(self._v)
+        return cp.linalg.norm(self._v)
     
     @property
     def normalized(self):
@@ -41,16 +49,27 @@ class Vector:
     @property
     def v(self):
         return self._v
+
+    @property
+    def cross_product_matrix(self):
+        return cp.array([
+            [ 0, -self.v[2], self.v[1] ],
+            [ self.v[2], 0, -self.v[0] ],
+            [ -self.v[1], self.v[0], 0 ]
+        ])
+
+    def outer(self, other):
+        return cp.outer(self.v, other.v)
     
     def cross(self, other):
         assert isinstance(other, Vector)
 
-        vp = np.cross(self._v[:3], other._v[:3])
+        vp = cp.cross(self._v[:3], other._v[:3])
 
-        return Vector(np.hstack((vp, [0])))
+        return Vector(cp.hstack((vp, [0])))
     
     def isclose(self, v2, **kwargs):
-        return np.all(np.isclose(self._v, v2._v, **kwargs))
+        return cp.all(cp.isclose(self._v, v2._v, **kwargs))
     
     def __getitem__(self, n):
         return self._v[n]
@@ -74,7 +93,7 @@ class Vector:
         return Vector(self._v / d)
 
     def __eq__(self, other):
-        return np.all(self._v == other._v)
+        return cp.all(self._v == other._v)
     
     def __matmul__(self, other):
         if isinstance(other, Vector):
