@@ -3,33 +3,34 @@ from lyotos.util import xp
 from lyotos.util import iarray
 
 class HitSet:
-    def __init__(self, bundle, idx):
+    def __init__(self, id, obj, bundle):
+        self._id = id
         self._bundle = bundle
+
+        if obj is not None:
+            self._obj_stack = [ obj.id ]
+        else:
+            self._obj_stack = None
+            
+    def set_idx(self, idx):
         self._idx = idx
-
+        
     def push_obj(self, obj):
-        for i in xp.argwhere(self._idx == True):
-            self.bundle.hits._obj_stack[int(i)].append(obj.id)
-
+        # Only None for the all-miss HitSet 0
+        if self._obj_stack is not None:
+            self._obj_stack.append(obj)
+        
     def pop_obj(self):
-        objs = [ self.bundle.hits._obj_stack[int(i)] for i in xp.argwhere(self._idx == True) ]
+        return self._obj_stack.pop()
 
-        for o in objs:
-            o.pop()
-
-        uo = xp.unique(objs)
-            
-        retval = {}
-            
-        objs = iarray([ ose[-1] for ose in self.bundle.hits._obj_stack ])
-
-        for oid in uo:
-            retval[int(oid)] = HitSet(self.bundle, objs == oid)
-
-        return retval
+    @property
+    def obj(self):
+        return self._obj_stack[-1]
         
-        
-            
+    @property
+    def id(self):
+        return self._id
+    
     @property
     def bundle(self):
         return self._bundle

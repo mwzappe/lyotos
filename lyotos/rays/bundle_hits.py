@@ -1,4 +1,4 @@
-from lyotos.util import xp
+from lyotos.util import xp, use_gpu
 
 from lyotos.util import darray, iarray
 from lyotos.geometry import GCS
@@ -6,6 +6,14 @@ from lyotos.geometry import GCS
 from .base import MISS
 from .hit_set import HitSet
 
+if use_gpu:
+    from numba import cuda
+
+    @cuda.jit(cache=True)
+    def add_best_hit(idx, d, l, p, n):
+        pass
+
+    
 class BundleHits:
     def __init__(self, bundle):
         self._bundle = bundle
@@ -13,20 +21,34 @@ class BundleHits:
         self._d = xp.zeros((bundle.n_rays, 4))
         self._p = xp.zeros((bundle.n_rays, 4))
         self._n = xp.zeros((bundle.n_rays, 4))
-        self._obj_stack = [ [] for _ in range(bundle.n_rays) ]
+        self._hit_set = xp.zeros(bundle.n_rays, dtype=int)
+
+        self._hit_sets = [ HitSet(0, None, self.bundle) ]
         
+        self._idx = xp.empty(bundle.n_rays, dtype=bool)
+                     
     def add(self, obj, d, l, p, n):
-        idx = l < self.l
+        self._idx[:] = l < self.l
 
-        self.d[idx,:] = d[idx]
-        self.l[idx] = l[idx]
-        self.p[idx,:] = p[idx]
-        self.n[idx,:] = n[idx]
+        if not xp.any(self._idx):
+            print(f"No hits {obj} {self._idx}")
+            return self._hit_sets[0]
 
-        for i in xp.argwhere(idx == True):
-            self._obj_stack[int(i)] = [ obj.id ]
+        if obj is None:
+            raise RuntimeError("Null object passed into add")
         
-        return HitSet(self.bundle, idx)
+        retval = HitSet(len(self._hit_sets), obj, self.bundle)
+
+        self._hit_sets.append(retval)
+        
+        self.d[self._idx,:] = d[self._idx]
+        self.l[self._idx] = l[self._idx]
+        self.p[self._idx,:] = p[self._idx]
+        self.n[self._idx,:] = n[self._idx]
+
+        self._hit_set[self._idx] = retval.id
+                        
+        return retval
 
     def render(self, renderer):
         sp = self.bundle.positions
@@ -38,12 +60,17 @@ class BundleHits:
     def hit_sets(self):
         retval = {}
         
-        objs = iarray([ ose[-1] for ose in self._obj_stack ])
+        hit_sets = xp.unique(self._hit_set)
 
-        uo = xp.unique(objs)
-
-        for oid in uo:
-            retval[int(oid)] = HitSet(self.bundle, objs == oid)
+        print(f"hit_sets: {hit_sets}")
+        
+        for hsid in hit_sets:
+            hsid = int(hsid)
+            hs = self._hit_sets[hsid]
+            print(f"HSID: {hs.id} {hs._obj_stack}")
+            self._idx[:] = self._hit_set == hsid 
+            hs.set_idx(self._idx)
+            retval[hs.obj.id] = hs
 
         return retval
         

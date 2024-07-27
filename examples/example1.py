@@ -27,7 +27,7 @@ print(f"Lens Petzval Sum: {l.petzval_sum}")
 
 s.add_element(l)
 
-bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 2 * cp.pi / 180, N=10)
+bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 2 * cp.pi / 180, N=100000)
 
 print(bundle)
 

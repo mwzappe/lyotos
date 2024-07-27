@@ -7,7 +7,7 @@ class Material:
                 raise RuntimeException("n or er must be defined")
 
             if not callable(er):                
-                n = lambda _: xp.sqrt(er)
+                n = lambda _: float(xp.sqrt(er))
             else:
                 n = lambda nu: xp.sqrt(er(nu))
 
@@ -17,6 +17,7 @@ class Material:
                 raise RuntimeException("Only one of er or n can be defined")
 
             if not callable(n):
+                n = float(n)
                 self._n = lambda nu: n
             else:
                 self._n = n

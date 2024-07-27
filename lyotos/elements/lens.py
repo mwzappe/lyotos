@@ -106,23 +106,22 @@ class MultipletLens(Element):
         
         hit_sets = hit_set.pop_obj()
 
-        for oid, hs in hit_sets.items():
-            obj = GeometryObj.get(oid)
-            print(f"Tracing rays for {obj}")
+        obj = GeometryObj.get(hit_set.obj)
 
-            
-            if obj == self.surfaces[0]:
-                m1 = self.surroundings
-                m2 = self.materials[0]
-            elif obj == self.surfaces[-1]:
-                m2 = self.materials[-1]
-                m1 = self.surroundings
-            else:
-                si = int(xp.argwhere(self._surface_idx == oid)[0])
-                m1 = self.materials[si-1]
-                m2 = self.materials[si]
+        print(f"Tracing rays for {obj}")
+    
+        if obj == self.surfaces[0]:
+            m1 = self.surroundings
+            m2 = self.materials[0]
+        elif obj == self.surfaces[-1]:
+            m2 = self.materials[-1]
+            m1 = self.surroundings
+        else:
+            si = int(xp.argwhere(self._surface_idx == oid)[0])
+            m1 = self.materials[si-1]
+            m2 = self.materials[si]
 
-            bundles += obj.interact(hs, m1, m2)
+        bundles += obj.interact(hit_set, m1, m2)
 
         print(f"Propagated bundles: {len(bundles)}")
             

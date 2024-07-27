@@ -59,7 +59,7 @@ class SphericalSurface(Surface):
             ls[(p0[:,2] < -self.R),0] = MISS
             ls[(p1[:,2] < -self.R),1] = MISS
             
-        l[:], p[:] = take_lowest_l_p_2(ls, p0, p1)
+        take_lowest_l_p_2(l, p, ls, p0, p1)
         
         bundle.put_scratch(ls, p0, p1)
         

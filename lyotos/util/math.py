@@ -14,6 +14,8 @@ else:
     #from cupyx import jit
 
     from numba import cuda
+
+    print(f"Using CUDA: Compute Capability {xp.cuda.Device(0).compute_capability}")
     
 _xp = xp
     
@@ -33,20 +35,39 @@ def iarray(o):
 
 MISS = xp.finfo(float_type).max
 
-def take_lowest_l_p_2(l, p0, p1):
-    l[xp.isnan(l)] = 1e11
-            
-    li = xp.argmin(l, 1)
+if use_gpu:
+    @cuda.jit(cache=True)
+    def _take_lowest_l_p_2(l, p, ls, p0, p1):
+        i = cuda.grid(1)
 
-    p = xp.einsum("i,ij->ij", (1 - li), p0) + xp.einsum("i,ij->ij", li, p1)
-    l = xp.take_along_axis(l, li[:,xp.newaxis], 1).flatten()
-    
-    l[l == 1e11] = xp.nan
+        if i < l.shape[0]:
+            if ls[i, 0] < ls[i, 1]:
+                l[i] = ls[i, 0]
+                p[i,0] = p0[i,0]
+                p[i,1] = p0[i,1]
+                p[i,2] = p0[i,2]
+                p[i,3] = p0[i,3]
+            else:
+                l[i] = ls[i, 1]
+                p[i,0] = p1[i,0]
+                p[i,1] = p1[i,1]
+                p[i,2] = p1[i,2]
+                p[i,3] = p1[i,3]
 
-    return l, p
+    def take_lowest_l_p_2(l, p, ls, p0, p1):
+        tpb = 128
+        bpg = -(-l.shape[0] // tpb)
+        _take_lowest_l_p_2[tpb, bpg](l, p, ls, p0, p1)
+else:
+    def take_lowest_l_p_2(l, p, ls, p0, p1):
+        li = xp.argmin(ls, 1)
+
+        p[li == 0] = p0[li == 0]
+        p[li == 1] = p1[li == 1]
+        l[:] = xp.take_along_axis(ls, li[:,xp.newaxis], 1).flatten()
 
 if use_gpu:
-    @cuda.jit
+    @cuda.jit(cache=True)
     def _batch_dot(out, vs1, vs2):
         i = cuda.grid(1)
         
@@ -56,7 +77,7 @@ if use_gpu:
                       vs1[i, 2] * vs2[i, 2])
 
     def batch_dot(out, vs1, vs2):
-        tpb = 16
+        tpb = 128
         bpg = -(-out.shape[0] // tpb)
         _batch_dot[bpg, tpb](out, vs1, vs2)
 else:
