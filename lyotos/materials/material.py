@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 
 class Material:
     def __init__(self, n=None, er=None):
@@ -7,9 +7,9 @@ class Material:
                 raise RuntimeException("n or er must be defined")
 
             if not callable(er):                
-                n = lambda _: cp.sqrt(er)
+                n = lambda _: xp.sqrt(er)
             else:
-                n = lambda nu: cp.sqrt(er(nu))
+                n = lambda nu: xp.sqrt(er(nu))
 
             self._n = n
         else:

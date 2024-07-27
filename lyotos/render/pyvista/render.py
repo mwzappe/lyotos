@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 
 import pyvista as pv
 
@@ -17,14 +17,14 @@ class PVRenderer:
 
         mesh = pv.Cylinder(center=(0,0,h/2), direction=(0,0,1), radius=R, height=h, capping=capping)
 
-        mesh.transform(M._M.get())
+        mesh.transform(xp.get(M._M))
 
         self._add_mesh(mesh)
 
     def add_spherical_cap(self, cs, R, r):
         M = cs.toGCS
 
-        phi = cp.arcsin(r/R) * 180/cp.pi
+        phi = xp.arcsin(r/R) * 180/xp.pi
         
         if R > 0:
             mesh = pv.Sphere(radius=R,
@@ -38,20 +38,20 @@ class PVRenderer:
                              end_phi=-phi)
 
             
-        mesh.transform(M._M.get())
+        mesh.transform(xp.get(M._M))
 
         self._add_mesh(mesh)
 
     def add_lines(self, cs, start_points, end_points):
         M = cs.toGCS
 
-        pts = cp.concatenate((start_points, end_points))[:,:3].get()
+        pts = xp.get(xp.concatenate((start_points, end_points))[:,:3])
 
-        lines = iarray([ [ 2, i, i + start_points.shape[0] ] for i in range(start_points.shape[0]) ]).flatten().get()
+        lines = xp.get(iarray([ [ 2, i, i + start_points.shape[0] ] for i in range(start_points.shape[0]) ]).flatten())
         
         mesh = pv.PolyData(pts, lines=lines)
         
-        mesh.transform(M._M.get())
+        mesh.transform(xp.get(M._M))
 
         self._add_mesh(mesh)
         

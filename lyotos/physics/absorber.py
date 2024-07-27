@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 
 from .interaction import Interaction
 
@@ -7,4 +7,4 @@ class Absorber(Interaction):
         super().__init__(surface)
 
     def interact(self, positions, directions, normals):
-        return cp.array([]), cp.array([])
+        return xp.array([]), xp.array([])

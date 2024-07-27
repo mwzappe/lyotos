@@ -61,9 +61,9 @@ class Radiator(Caster):
 
             ap = paths[0].final_point
             bp = paths[1].final_point - ap
-            cp = paths[2].final_point - ap
+            xp.= paths[2].final_point - ap
             
-            area2 = bp.cross(cp).norm / 2
+            area2 = bp.cross(xp..norm / 2
             
             # If we take the mean of the radiance function at a, b, c
             # then we can multiply by the area to get the total power in a triangle

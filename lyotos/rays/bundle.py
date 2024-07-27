@@ -1,4 +1,6 @@
-import cupy as cp
+from collections import defaultdict
+
+from lyotos.util import xp
 
 from lyotos.geometry import GCS
 
@@ -22,17 +24,37 @@ class Bundle(_BundleBase):
         self._cs = cs
         
         if ids is None:
-            ids = cp.arange(self._next_id, self._next_id + positions.shape[0])
+            ids = xp.arange(self._next_id, self._next_id + positions.shape[0])
             self._next_id += positions.shape[0]
 
         self._ids = ids
 
         if parents is None:
-            parents = cp.zeros(positions.shape[0], dtype=int)
+            parents = xp.zeros(positions.shape[0], dtype=int)
 
         self._parents = parents
 
         self._hits = BundleHits(self)
+
+        self._scratch_arrays = defaultdict(list)
+        
+    def get_scratch(self, N=1):
+        try:
+            retval = self._scratch_arrays[N-1].pop()
+        except:
+            if N == 1:
+                retval = xp.empty(self.n_rays, dtype=xp.float64)
+            else:
+                retval = xp.empty((self.n_rays, N), dtype=xp.float64)
+        
+        return retval
+
+    def put_scratch(self, *args):
+        for s in args:
+            if len(s.shape) == 1:
+                self._scratch_arrays[0].append(s)
+            else:
+                self._scratch_arrays[s.shape[1]-1].append(s)
         
         
     def toCS(self, newcs):
@@ -47,10 +69,6 @@ class Bundle(_BundleBase):
             return BundleAlias(self, GCS)
 
         return self
-
-    
-    def pts_at(self, ls):
-        return self.positions + cp.einsum("i,ij->ij", ls, self.directions)
 
     @property
     def cs(self):
@@ -141,3 +159,11 @@ class BundleAlias(_BundleBase):
 
     def add_hits(self, obj, l, p, n):
         return self.hits.add(obj, self.directions, l, p, n)
+
+    def get_scratch(self, N=1):
+        return self._bundle.get_scratch(N)
+
+    def put_scratch(self, *args):
+        self._bundle.put_scratch(*args)
+
+    

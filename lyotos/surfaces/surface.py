@@ -17,11 +17,21 @@ class Surface(GeometryObj):
         return new_rays
     
     def intersect(self, bundle):
+        l = bundle.get_scratch()
+        p = bundle.get_scratch(4)
+        n = bundle.get_scratch(4)
+        
         bundle = bundle.toCS(self.cs)
         
-        l, p, n = self.do_intersect(bundle)
+        self.do_intersect(bundle, l, p, n)
 
-        return bundle.add_hits(self, l, p, n)
+        retval = bundle.add_hits(self, l, p, n)
+
+        bundle.put_scratch(l)
+        bundle.put_scratch(p)
+        bundle.put_scratch(n)
+
+        return retval
 
     def render(self, renderer):
         raise RuntimeError("Render is not implemented for class {self.__class__.__name__}")

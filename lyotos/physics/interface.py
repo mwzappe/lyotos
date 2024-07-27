@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 
 from lyotos.util import batch_dot
 from lyotos.rays import Bundle
@@ -23,28 +23,30 @@ class Interface(Interaction):
         p = hit_set.p
         d = hit_set.directions
         n = hit_set.n
-        
-        ct = batch_dot(d, n)
+
+        ct = xp.empty(p.shape[0])
+
+        batch_dot(ct, d, n)
 
         #print(f"Directions: {d}")
         #print(f"Normals: {n}")
         #print(f"Dot products: {ct}")
 
-        m1 = cp.ones(len(ct)) * self.m1.n(hit_set.nu)
-        m2 = cp.ones(len(ct)) * self.m2.n(hit_set.nu)
+        m1 = xp.ones(len(ct)) * self.m1.n(hit_set.nu)
+        m2 = xp.ones(len(ct)) * self.m2.n(hit_set.nu)
 
         m1[ct < 0] = self.m2.n(hit_set.nu)
         m2[ct < 0] = self.m1.n(hit_set.nu)
 
         mu = m1/m2
 
-        nc = cp.sqrt(1 - mu**2 * (1 - ct**2)) - mu * ct
+        nc = xp.sqrt(1 - mu**2 * (1 - ct**2)) - mu * ct
         
         #print(m1)
         #print(m2)
         #print(nc)
 
-        t = mu[:,cp.newaxis] * d + nc[:,cp.newaxis] * n
+        t = mu[:,xp.newaxis] * d + nc[:,xp.newaxis] * n
 
         #print(t)
         

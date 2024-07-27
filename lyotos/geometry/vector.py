@@ -1,9 +1,9 @@
-import cupy as cp
+from lyotos.util import xp
 
 class Vector:
     def __init__(self, v = [ 0, 0, 1, 0 ]):
         assert v[3] == 0, f"Vector initialized with 3rd component non-zero {v}"
-        self._v = cp.asarray(v, dtype=float)
+        self._v = xp.asarray(v, dtype=float)
 
     @property
     def x(self):
@@ -36,7 +36,7 @@ class Vector:
 
     @property
     def norm(self):
-        return cp.linalg.norm(self._v)
+        return xp.linalg.norm(self._v)
     
     @property
     def normalized(self):
@@ -52,24 +52,24 @@ class Vector:
 
     @property
     def cross_product_matrix(self):
-        return cp.array([
+        return xp.array([
             [ 0, -self.v[2], self.v[1] ],
             [ self.v[2], 0, -self.v[0] ],
             [ -self.v[1], self.v[0], 0 ]
         ])
 
     def outer(self, other):
-        return cp.outer(self.v, other.v)
+        return xp.outer(self.v, other.v)
     
     def cross(self, other):
         assert isinstance(other, Vector)
 
-        vp = cp.cross(self._v[:3], other._v[:3])
+        vp = xp.cross(self._v[:3], other._v[:3])
 
-        return Vector(cp.hstack((vp, [0])))
+        return Vector(xp.hstack((vp, [0])))
     
     def isclose(self, v2, **kwargs):
-        return cp.all(cp.isclose(self._v, v2._v, **kwargs))
+        return xp.all(xp.isclose(self._v, v2._v, **kwargs))
     
     def __getitem__(self, n):
         return self._v[n]
@@ -93,7 +93,7 @@ class Vector:
         return Vector(self._v / d)
 
     def __eq__(self, other):
-        return cp.all(self._v == other._v)
+        return xp.all(self._v == other._v)
     
     def __matmul__(self, other):
         if isinstance(other, Vector):

@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 
 from lyotos.geometry import GeometryObj, CSM, Vector, Sphere
 from lyotos.surfaces import SphericalSurface, CylinderSurface
@@ -46,14 +46,14 @@ class MultipletLens(Element):
 
         z1 = self.surfaces[0].edge_z
         z2 = self.surfaces[-1].edge_z
-        edge_h = (self._total_thickness + z2 - z1).get()
+        edge_h = xp.get(self._total_thickness + z2 - z1)
         
         self._edge = CylinderSurface(cs=cs.xform(CSM.tZ(z1)),
                                      interaction=Interface(last_m, self.surroundings),
                                      R=aperture/2,
                                      h = edge_h)
 
-        self._surface_idx = cp.array([ o.id for o in self._surfaces ])
+        self._surface_idx = xp.array([ o.id for o in self._surfaces ])
         
     @property
     def surfaces(self):
@@ -118,7 +118,7 @@ class MultipletLens(Element):
                 m2 = self.materials[-1]
                 m1 = self.surroundings
             else:
-                si = int(cp.argwhere(self._surface_idx == oid)[0])
+                si = int(xp.argwhere(self._surface_idx == oid)[0])
                 m1 = self.materials[si-1]
                 m2 = self.materials[si]
 

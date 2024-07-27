@@ -27,11 +27,27 @@ print(f"Lens Petzval Sum: {l.petzval_sum}")
 
 s.add_element(l)
 
-bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 2 * cp.pi / 180, N=20)
+bundle = rays.create_fan(GCS, Position.CENTER, Vector.Z, 2 * cp.pi / 180, N=10)
+
+print(bundle)
 
 s.push_bundle(bundle)
 
-s.trace_loop()
+import cupyx
+from cupyx.profiler import benchmark
+
+import time
+start = time.perf_counter_ns()
+
+with cupyx.profiler.profile():
+    s.trace_loop()
+
+end = time.perf_counter_ns()
+
+print(f"Trace time: {(end-start)/1000000}ms")
+
+if False:
+    exit()
 
 r = PVRenderer(s)
 

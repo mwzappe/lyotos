@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 
 from lyotos.geometry import CSM, GCS, Position, Sphere
 from lyotos.rays import MISS

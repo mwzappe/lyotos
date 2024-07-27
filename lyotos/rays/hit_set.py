@@ -1,8 +1,6 @@
-import cupy as cp
+from lyotos.util import xp
 
 from lyotos.util import iarray
-
-from .hit_base import HitBase
 
 class HitSet:
     def __init__(self, bundle, idx):
@@ -10,16 +8,16 @@ class HitSet:
         self._idx = idx
 
     def push_obj(self, obj):
-        for i in cp.argwhere(self._idx == True):
+        for i in xp.argwhere(self._idx == True):
             self.bundle.hits._obj_stack[int(i)].append(obj.id)
 
     def pop_obj(self):
-        objs = [ self.bundle.hits._obj_stack[int(i)] for i in cp.argwhere(self._idx == True) ]
+        objs = [ self.bundle.hits._obj_stack[int(i)] for i in xp.argwhere(self._idx == True) ]
 
         for o in objs:
             o.pop()
 
-        uo = cp.unique(objs)
+        uo = xp.unique(objs)
             
         retval = {}
             
@@ -65,7 +63,7 @@ class HitSet:
         return self.bundle.directions[self._idx]
 
     def pts_at(self, ls):
-        return self.positions + cp.einsum("i,ij->ij", ls, self.directions)
+        return self.positions + xp.einsum("i,ij->ij", ls, self.directions)
 
     def __len__(self):
         return self.positions.shape[0]

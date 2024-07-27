@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 from scipy.spatial.transform import Rotation
 
 from lyotos.util import darray
@@ -21,12 +21,12 @@ class CSM:
         
     @property
     def inv(self):
-        return CSM(cp.linalg.inv(self._M))
+        return CSM(xp.linalg.inv(self._M))
 
     def batch_mult(self, other):
         assert len(other.shape) == 2, f"Only handles vectors for now (i.e. shape must be Nx4): shape {other.shape}"
 
-        return cp.einsum("jk,ik->ij", self._M, other).reshape((len(other), 4))
+        return xp.einsum("jk,ik->ij", self._M, other).reshape((len(other), 4))
     
     def __matmul__(self, other):
         if isinstance(other, CSM):
@@ -44,34 +44,34 @@ class CSM:
     
     @classmethod
     def rotX(cls, theta):
-        M = cp.identity(4)
+        M = xp.identity(4)
 
-        M[1][1] = cp.cos(theta)
-        M[1][2] = -cp.sin(theta)
-        M[2][1] = cp.sin(theta)
-        M[2][2] = cp.cos(theta)
+        M[1][1] = xp.cos(theta)
+        M[1][2] = -xp.sin(theta)
+        M[2][1] = xp.sin(theta)
+        M[2][2] = xp.cos(theta)
 
         return CSM(M)
 
     @classmethod
     def rotY(cls, theta):
-        M = cp.identity(4)
+        M = xp.identity(4)
 
-        M[0][0] = cp.cos(theta)
-        M[0][2] = cp.sin(theta)
-        M[2][0] = -cp.sin(theta)
-        M[2][2] = cp.cos(theta)
+        M[0][0] = xp.cos(theta)
+        M[0][2] = xp.sin(theta)
+        M[2][0] = -xp.sin(theta)
+        M[2][2] = xp.cos(theta)
 
         return CSM(M)
 
     @classmethod
     def rotZ(cls, theta):
-        M = cp.identity(4)
+        M = xp.identity(4)
 
-        M[0][0] = cp.cos(theta)
-        M[0][1] = -cp.sin(theta)
-        M[1][0] = cp.sin(theta)
-        M[1][1] = cp.cos(theta)
+        M[0][0] = xp.cos(theta)
+        M[0][1] = -xp.sin(theta)
+        M[1][0] = xp.sin(theta)
+        M[1][1] = xp.cos(theta)
 
         return CSM(M)
 
@@ -79,7 +79,7 @@ class CSM:
     def rot2(cls, phi, theta):
         # Rotate Z axis by phi
 
-        v = Vector.from_xyz(cp.sin(phi), 0, cp.cos(phi))
+        v = Vector.from_xyz(xp.sin(phi), 0, xp.cos(phi))
         
         return cls.from_axis_angle(v, theta) @ cls.rotY(phi)
 
@@ -88,12 +88,12 @@ class CSM:
         #return cls.from_scipy_rotation(Rotation.from_rotvec(axis._v[:3] * theta))
 
         ux, uy, uz = axis.normalized.v[:3]
-        ct = cp.cos(theta)
-        st = cp.sin(theta)
+        ct = xp.cos(theta)
+        st = xp.sin(theta)
 
         # ct * I + st * axis.cross_product_matrix + (1 - ct) * outer(u, u)
         
-        M = cp.array([
+        M = xp.array([
             [ ct + ux**2 * (1 - ct), ux * uy * (1 - ct) - uz * st, ux * uz * (1 - ct) + uy * st, 0 ],
             [ uy * ux * (1 - ct) + uz * st, ct + uy**2 * (1 - ct), uy * uz * (1 - ct) - ux * st, 0 ],
             [ uz * ux * (1 - ct) - uz * st, uy * uz * (1 - ct) + ux * st, ct + uz**2 * (1 - ct), 0 ],
@@ -108,7 +108,7 @@ class CSM:
             return cls.I
             
         if v == -Vector.Z:
-            return cls.rotY(cp.pi)
+            return cls.rotY(xp.pi)
 
         axis = v.cross(Vector.Z).normalized
         
@@ -118,7 +118,7 @@ class CSM:
         
     @classmethod
     def from_scipy_rotation(cls, R):
-        m = cp.pad(cp.asarray(R.as_matrix()), ((0,1),(0,1))) 
+        m = xp.pad(xp.asarray(R.as_matrix()), ((0,1),(0,1))) 
         m[3][3] = 1
         return cls(m)
 
@@ -131,7 +131,7 @@ class CSM:
     # Create a new CS translated by dz
     @classmethod
     def tX(cls, dx):
-        M = cp.identity(4)
+        M = xp.identity(4)
 
         M[0][3] = -dx
 
@@ -141,7 +141,7 @@ class CSM:
     # Create a new CS translated by dz
     @classmethod
     def tY(cls, dy):
-        M = cp.identity(4)
+        M = xp.identity(4)
 
         M[1][3] = -dy
 
@@ -151,7 +151,7 @@ class CSM:
     # Create a new CS translated by dz
     @classmethod
     def tZ(cls, dz):
-        M = cp.identity(4)
+        M = xp.identity(4)
 
         M[2][3] = -dz
 

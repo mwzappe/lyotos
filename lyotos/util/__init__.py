@@ -1,3 +1,7 @@
+from .math import xp as xp
+
+from .math import use_gpu
+
 from .math import MISS
 
 from .math import darray, iarray

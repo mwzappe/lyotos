@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 
 class _BundleBase:
     def __init__(self, positions, directions):
@@ -35,8 +35,9 @@ class _BundleBase:
     def directions(self):
         return self._directions
 
-    def pts_at(self, ls):
-        return self.positions + cp.einsum("i,ij->ij", ls, self.directions)
+    def pts_at(self, ps, ls):
+        ps[:,:] = self.positions
+        ps[:,:] += xp.einsum("i,ij->ij", ls, self.directions)
 
     def __len__(self):
         return self.positions.shape[0]

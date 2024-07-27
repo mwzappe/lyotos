@@ -1,4 +1,4 @@
-import cupy as cp
+from lyotos.util import xp
 
 from lyotos.util import darray
 from .vector import Vector
@@ -6,7 +6,7 @@ from .vector import Vector
 class Position:
     def __init__(self, v=[ 0, 0, 0, 1]):
         assert v[3] == 1, f"Position v[3] != 1: {v}"
-        self._v = cp.asarray(v, dtype=float) 
+        self._v = xp.asarray(v, dtype=float) 
 
     @property
     def x(self):
@@ -38,7 +38,7 @@ class Position:
         
     @property
     def norm(self):
-        return cp.linalg.norm(self._v[:3])
+        return xp.linalg.norm(self._v[:3])
 
     @property
     def v3(self):
