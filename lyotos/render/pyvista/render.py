@@ -11,6 +11,8 @@ class PVRenderer:
     def __init__(self, system):
         self._plotter = pv.Plotter()
         self._system = system
+
+        #self._plotter.background_color = "#8888cc"
         
     def add_cylinder(self, cs, R, h, capping=False):
         M = cs.toGCS
@@ -25,7 +27,7 @@ class PVRenderer:
         M = cs.toGCS
 
         phi = xp.arcsin(r/R) * 180/xp.pi
-        
+
         if R > 0:
             mesh = pv.Sphere(radius=R,
                              center=(0.0, 0.0, R),
@@ -42,7 +44,7 @@ class PVRenderer:
 
         self._add_mesh(mesh)
 
-    def add_lines(self, cs, start_points, end_points):
+    def add_lines(self, cs, start_points, end_points, color, opacity):
         M = cs.toGCS
 
         pts = xp.get(xp.concatenate((start_points, end_points))[:,:3])
@@ -53,11 +55,13 @@ class PVRenderer:
         
         mesh.transform(xp.get(M._M))
 
-        self._add_mesh(mesh)
+        #mesh['line_opacity'] = opacity
+
+        self._add_mesh(mesh, color=color) #, opacity=opacity)
         
     def _add_mesh(self, mesh, **kwargs):
         if "opacity" not in kwargs:
-            kwargs["opacity"] = 0.5
+            kwargs["opacity"] = 0.2
 
         #if "line_width" not in kwargs:
         #    kwargs["line_width"] = 3
@@ -69,19 +73,21 @@ class PVRenderer:
         
         for b in Bundle.bundles:
             b.hits.render(self)
+
+        if False:
+            s = pv.Sphere(radius=1, center=(0, 0, 000))
+
+            self._plotter.add_mesh(s, color="red")
         
-        s = pv.Sphere(radius=1, center=(0, 0, 000))
+            s = pv.Sphere(radius=1, center=(0, 0, 100))        
+            
+            self._plotter.add_mesh(s, color="green")
 
-        self._plotter.add_mesh(s, color="red")
-        
-        s = pv.Sphere(radius=1, center=(0, 0, 100))        
+            s = pv.Sphere(radius=1, center=(0, 0, 200))        
 
-        self._plotter.add_mesh(s, color="green")
+            self._plotter.add_mesh(s, color="blue")
 
-        s = pv.Sphere(radius=1, center=(0, 0, 200))        
-
-        self._plotter.add_mesh(s, color="blue")
-
+        self._plotter.set_focus([0, 0, 100])
         self._plotter.view_zx()
         #self._plotter.set_viewup([1, 0, 0])
         self._plotter.show_axes()

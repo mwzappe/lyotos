@@ -1,6 +1,6 @@
 from lyotos.util import xp, use_gpu
 
-from lyotos.util import darray, iarray
+from lyotos.util import darray, iarray, WavelengthToRGB
 from lyotos.geometry import GCS
 
 from .base import MISS
@@ -31,7 +31,6 @@ class BundleHits:
         self._idx[:] = l < self.l
 
         if not xp.any(self._idx):
-            print(f"No hits {obj} {self._idx}")
             return self._hit_sets[0]
 
         if obj is None:
@@ -51,10 +50,15 @@ class BundleHits:
         return retval
 
     def render(self, renderer):
+        if xp.any(self.l == MISS):
+            print("WARNING: ESCAPED RAY")
+            print(self.bundle)
+            return
+
         sp = self.bundle.positions
         ep = sp + self.l[:,xp.newaxis] * self.bundle.directions
-
-        renderer.add_lines(self.bundle.cs, sp, ep)
+        
+        renderer.add_lines(self.bundle.cs, sp, ep, WavelengthToRGB(self.bundle.nu), self.bundle.amplitudes[:,0])
 
     @property
     def hit_sets(self):
@@ -62,12 +66,9 @@ class BundleHits:
         
         hit_sets = xp.unique(self._hit_set)
 
-        print(f"hit_sets: {hit_sets}")
-        
         for hsid in hit_sets:
             hsid = int(hsid)
             hs = self._hit_sets[hsid]
-            print(f"HSID: {hs.id} {hs._obj_stack}")
             self._idx[:] = self._hit_set == hsid 
             hs.set_idx(self._idx)
             retval[hs.obj.id] = hs
@@ -93,4 +94,3 @@ class BundleHits:
     @property
     def n(self):
         return self._n
-        

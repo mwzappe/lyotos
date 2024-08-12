@@ -22,11 +22,7 @@ class _BundleBase:
     @property
     def n(self):
         return self._n
-        
-    @property
-    def nu(self):
-        return 500
-        
+            
     @property
     def positions(self):
         return self._positions

@@ -8,18 +8,52 @@ from .base import MISS
 from .bundle_base import _BundleBase
 from .bundle_hits import BundleHits
 
+amplitude_cutoff = 1e-6
+
 class Bundle(_BundleBase):
     _next_id = 1
     _next_bundle_id = 0
     bundles = []
 
-    def __init__(self, positions, directions, cs = GCS, ids=None, parents=None):
+    def __init__(self, positions, directions, cs = GCS, amplitudes=None, phases=None, ids=None, parents=None, hit_count=0, nu=535):
+        idx = xp.ones(positions.shape[0], dtype=bool)
+
+        if amplitudes is not None:
+            idx = xp.logical_or.reduce(amplitudes > amplitude_cutoff, 1)
+            amplitudes = amplitudes[idx]
+
+            if not xp.all(idx):
+                print("Amplitude reduction")
+            
+        positions = positions[idx]
+        directions = directions[idx]
+
+        if phases is not None:
+            phases = phases[idx]
+
+        if parents is not None:
+            parents = parents[idx]
+        
+        
         super().__init__(positions, directions)
 
         self._bundle_id = self._next_bundle_id
         self._next_bundle_id += 1
-
+        self._hit_count = hit_count
+        
         self.bundles.append(self)
+
+        if amplitudes is not None:
+            self._amplitudes = amplitudes
+        else:
+            self._amplitudes = xp.ones((self.positions.shape[0], 2))
+
+        if phases is not None:
+            self._phases = phases
+        else:
+            self._phases = xp.zeros((self.positions.shape[0], 2))
+
+        self._nu = nu
         
         self._cs = cs
         
@@ -37,6 +71,9 @@ class Bundle(_BundleBase):
         self._hits = BundleHits(self)
 
         self._scratch_arrays = defaultdict(list)
+
+    def copy(self):
+        return Bundle(self.positions, self.directions, self.cs, self.amplitudes, self.phases, ids=None, parents=None, nu=self.nu)
         
     def get_scratch(self, N=1):
         try:
@@ -107,8 +144,28 @@ class Bundle(_BundleBase):
         return self
 
     @property
+    def amplitudes(self):
+        return self._amplitudes
+
+    @property
+    def phases(self):
+        return self._phases
+    
+    @property
     def ids(self):
         return self._ids
+
+    @property
+    def hit_count(self):
+        return self._hit_count
+    
+    @property
+    def nu(self):
+        return self._nu
+
+    @nu.setter
+    def nu(self, nu):
+        self._nu = nu
     
     def __repr__(self):
         s = f"Bundle(\n"
@@ -150,6 +207,18 @@ class BundleAlias(_BundleBase):
     def parents(self):
         return self._bundle._parents
 
+    @property
+    def amplitudes(self):
+        return self._bundle._amplitudes
+
+    @property
+    def phases(self):
+        return self._bundle._phases
+
+    @property
+    def nu(self):
+        return self._bundle.nu
+    
     @property
     def bundle_id(self):
         return self._bundle.bundle_id

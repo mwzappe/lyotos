@@ -24,13 +24,13 @@ class Sphere(Surface):
         ls = bundle.get_scratch(2)        
         
         geo.Sphere.intersect(bundle, ls, self.R)
-
+        
         l[:] = xp.min(ls, axis=1).reshape(l.shape)
 
         bundle.put_scratch(ls)
         
         bundle.pts_at(p, l)
-                        
+
         n[:,:] = -p
 
         n[:,:] = xp.einsum("ij,i->ij", n, 1.0/xp.linalg.norm(n, axis=1))

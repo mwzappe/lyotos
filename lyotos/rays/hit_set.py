@@ -1,6 +1,7 @@
 from lyotos.util import xp
 
 from lyotos.util import iarray
+from lyotos.geometry import GeometryObj
 
 class HitSet:
     def __init__(self, id, obj, bundle):
@@ -11,6 +12,19 @@ class HitSet:
             self._obj_stack = [ obj.id ]
         else:
             self._obj_stack = None
+
+    def create_bundle(self, cs, d, amplitudes):
+        return self._bundle.__class__(self.p, d, cs=cs, amplitudes=amplitudes, parents=self.ids, nu=self._bundle.nu, hit_count=self._bundle.hit_count+1)
+            
+    def subset(self, idx):
+        retval = HitSet(self.id, None, self._bundle)
+
+        nidx = xp.copy(self._idx)
+        nidx[self._idx] = idx
+        
+        retval.set_idx(nidx)
+
+        return retval
             
     def set_idx(self, idx):
         self._idx = idx
@@ -62,6 +76,10 @@ class HitSet:
     @property
     def directions(self):
         return self.bundle.directions[self._idx]
+
+    @property
+    def amplitudes(self):
+        return self._bundle.amplitudes[self._idx]
 
     def pts_at(self, ls):
         return self.positions + xp.einsum("i,ij->ij", ls, self.directions)

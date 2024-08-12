@@ -41,25 +41,19 @@ class Sphere:
         @classmethod
         def intersect(cls, bundle, l, R, center=Position.CENTER.v):
             p = bundle.get_scratch(4)
-
-            xp.subtract(bundle.positions, center, out=p)
-            
             b = bundle.get_scratch()
             c = bundle.get_scratch()
             dsc = bundle.get_scratch()
+
+            xp.subtract(bundle.positions, center, out=p)
         
             batch_dot(b, p, bundle.directions)
             batch_dot(c, p, p)
 
-            xp.multiply(b, 2, out=b)
-            xp.subtract(c, R**2, out=c)
+            b[:] = 2.0 * b[:]
+            c[:] = c[:] - R**2
 
-            #a = 1
-            # dsc = sqrt(b**2 - 4 * a (=1) * c)
-            xp.power(b, 2, out=dsc)
-            xp.multiply(c, 4, out=c)
-            xp.subtract(dsc, c, out=dsc)
-            xp.sqrt(dsc, out=dsc)
+            dsc[:] = xp.sqrt(b[:]**2 - 4 * c)
             
             bundle.put_scratch(p, b, c, dsc)
         

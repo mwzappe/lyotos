@@ -82,4 +82,4 @@ if use_gpu:
         _batch_dot[bpg, tpb](out, vs1, vs2)
 else:
     def batch_dot(out, vs1, vs2):
-        return xp.einsum("ij,ij->i",vs1,vs2, out=out)
+        return xp.einsum("ij,ij->i",vs1[:,:3],vs2[:,:3], out=out)

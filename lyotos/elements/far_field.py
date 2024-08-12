@@ -21,6 +21,8 @@ class FarField(Element):
         
         self._center = center        
 
+        self._hits = []
+        
     @property
     def boundary(self):
         return [ self._surface ]
@@ -39,8 +41,10 @@ class FarField(Element):
 
     def propagate(self, hit_set):
         # Keep an array of rays by direction
+        self._hits.append(hit_set)
         
         return []
 
+    
     def render(self, renderer):
         pass

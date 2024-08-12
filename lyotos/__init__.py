@@ -1,3 +1,4 @@
+from .util import WavelengthToRGB
 from .geometry import *
 from .surfaces import *
 from .elements import *

@@ -51,28 +51,23 @@ class SphericalSurface(Surface):
 
         bundle.pts_at(p0, ls[:,0])
         bundle.pts_at(p1, ls[:,1])
-            
+        
         if self.R > 0:
             ls[(p0[:,2] > self.R),0] = MISS
             ls[(p1[:,2] > self.R),1] = MISS
         else:
-            ls[(p0[:,2] < -self.R),0] = MISS
-            ls[(p1[:,2] < -self.R),1] = MISS
+            ls[(p0[:,2] < self.R),0] = MISS
+            ls[(p1[:,2] < self.R),1] = MISS
             
         take_lowest_l_p_2(l, p, ls, p0, p1)
         
         bundle.put_scratch(ls, p0, p1)
-        
+
+        p[l == MISS] = darray([0, 0, 0, 0])
+        n[l == MISS] = darray([0, 0, 0, 0])
         l[p[:,0]**2 + p[:,1]**2 > self._apsq] = MISS
-                    
-        n[:] = -p + darray([ 0, 0, self.R, 0 ])
 
-        n[:, 3] = 0
-
-        n[:] = n / xp.linalg.norm(n, axis=1, keepdims=True)
-
-        if self.R < 0:
-            n[:] = -n
-        
+        n[l != MISS] = -(p[l != MISS] - darray([ 0, 0, self.R, 1 ])) / self.R
+            
     def render(self, renderer):
         renderer.add_spherical_cap(self.cs, self.R, self.aperture/2)

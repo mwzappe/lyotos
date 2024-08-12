@@ -194,7 +194,7 @@ class CoordinateSystem:
         return self._parent is None
 
     def __repr__(self):
-        return f"<<|{self._M._M}|>>"
+        return f"<<|From GCS: {self.toGCS}, M: {self._M._M}|>>"
     
 
 CSM.I = CSM()

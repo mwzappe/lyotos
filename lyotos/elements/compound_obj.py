@@ -1,5 +1,7 @@
 from lyotos.geometry import GeometryObj
 
+hit_count_limit = 15
+
 class CompoundObj(GeometryObj):
     def __init__(self, cs):
         super().__init__(cs)
@@ -25,8 +27,10 @@ class CompoundObj(GeometryObj):
         while self.pending_bundles:
             bundle = self.pop_bundle()
 
+            if bundle.hit_count > hit_count_limit:
+                continue
+            
             loop_count += 1
-            print(f"Loop iteration {loop_count} for {self}")
 
             # Test for hitting boundary
             for c in self.children:
@@ -36,9 +40,13 @@ class CompoundObj(GeometryObj):
                 
             for oid, hs in bundle.hits.hit_sets.items():
                 obj = GeometryObj.get(oid)
-                print(f"Propagating for object {obj}")
                 bundles = obj.propagate(hs)
                 self.push_bundles(bundles)
+
+            if loop_count > 400:
+                print("Loop break")
+                break
+                            
 
     def render(self, renderer):
         for c in self.children:

@@ -36,9 +36,11 @@ class CylinderSurface(Surface):
         
         dsc = xp.sqrt(b ** 2 - 4 * a * c)
 
-        ls[:] = darray([ -b + dsc, -b - dsc ]).T / 2 / a[:,xp.newaxis]
+        ls = darray([ -b + dsc, -b - dsc ]).T
+        
+        ls[a != 0] = ls[a != 0] / 2 / a[a != 0,xp.newaxis]
 
-        ls[xp.isnan(l)] = MISS
+        ls[a == 0] = MISS
         ls[l < 1e-7] = MISS
 
         l[:] = xp.min(ls, axis=1).reshape(l.shape)

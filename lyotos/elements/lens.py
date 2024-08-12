@@ -108,8 +108,6 @@ class MultipletLens(Element):
 
         obj = GeometryObj.get(hit_set.obj)
 
-        print(f"Tracing rays for {obj}")
-    
         if obj == self.surfaces[0]:
             m1 = self.surroundings
             m2 = self.materials[0]
@@ -122,8 +120,6 @@ class MultipletLens(Element):
             m2 = self.materials[si]
 
         bundles += obj.interact(hit_set, m1, m2)
-
-        print(f"Propagated bundles: {len(bundles)}")
             
         return bundles
 
